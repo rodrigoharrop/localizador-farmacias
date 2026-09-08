@@ -3,6 +3,7 @@ let mapa = null;
 let marcadores = [];
 let localizacaoAtual = null;
 let filtroAtual = 'todas';
+let rotaAtual = null;
 
 // Coordenadas centrais de Fortaleza
 const FORTALEZA_CENTER = { lat: -3.7319, lng: -38.5267 };
@@ -145,7 +146,7 @@ function inicializarMapa(lat, lng) {
     const distancia = localizacaoAtual ? calcularDistancia(localizacaoAtual.lat, localizacaoAtual.lng, farmacia.lat, farmacia.lng) : 0;
     
     marker.bindPopup(`
-      <div style="width: 220px;">
+      <div style="width: 240px;">
         <b style="font-size: 14px;">${farmacia.nome}</b><br>
         <span style="font-size: 11px; color: #666;">${farmacia.rede}</span><br>
         ${localizacaoAtual ? `<span style="font-size: 11px; color: #0F7D3F; font-weight: 600;">📏 ${distancia.toFixed(1)} km</span><br>` : ''}
@@ -153,9 +154,13 @@ function inicializarMapa(lat, lng) {
           📍 ${farmacia.endereco}<br>
           <small>${farmacia.bairro} - ${farmacia.cep}</small><br>
           <div style="margin-top: 8px; display: flex; gap: 6px;">
-            <button onclick="iniciarNavegacao(${farmacia.lat}, ${farmacia.lng})" 
+            ${localizacaoAtual ? `<button onclick="mostrarRota(${localizacaoAtual.lat}, ${localizacaoAtual.lng}, ${farmacia.lat}, ${farmacia.lng})" 
               style="flex: 1; padding: 6px; background: #0F7D3F; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
-              🗺️ Navegar
+              🗺️ Ver Rota
+            </button>` : ''}
+            <button onclick="abrirGoogleMaps(${farmacia.lat}, ${farmacia.lng})" 
+              style="flex: 1; padding: 6px; background: #666; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              📍 Google Maps
             </button>
           </div>
         </div>
@@ -163,6 +168,47 @@ function inicializarMapa(lat, lng) {
     `);
     marcadores.push(marker);
   });
+}
+
+function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
+  // Remover rota anterior se existir
+  if (rotaAtual) {
+    mapa.removeControl(rotaAtual);
+  }
+
+  // Criar rota
+  rotaAtual = L.Routing.control({
+    waypoints: [
+      L.latLng(latOrigem, lngOrigem),
+      L.latLng(latDestino, lngDestino)
+    ],
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1'
+    }),
+    lineOptions: {
+      styles: [
+        { color: '#0F7D3F', opacity: 0.8, weight: 5 }
+      ]
+    },
+    summaryTemplate: '<div class="info"><h2>{name}</h2><p>{distance}, {time}</p></div>',
+    altLineOptions: {
+      styles: [
+        { color: 'gray', opacity: 0.1, weight: 5 }
+      ]
+    },
+    language: 'pt_BR'
+  }).addTo(mapa);
+
+  // Ajustar zoom para ver a rota completa
+  setTimeout(() => {
+    const bounds = rotaAtual.getBounds();
+    mapa.fitBounds(bounds, { padding: [50, 50] });
+  }, 500);
+}
+
+function abrirGoogleMaps(lat, lng) {
+  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  window.open(url, '_blank');
 }
 
 function exibirFarmaciasGroupadas() {
@@ -186,7 +232,6 @@ function exibirFarmaciasGroupadas() {
     farmaciasGroupadas[f.rede].push(farmacia);
   });
 
-  // Ordenar por distância se localização foi fornecida
   Object.keys(farmaciasGroupadas).forEach(rede => {
     if (localizacaoAtual) {
       farmaciasGroupadas[rede].sort((a, b) => a.distancia - b.distancia);
@@ -223,7 +268,8 @@ function exibirFarmaciasGroupadas() {
               </div>
               ${localizacaoAtual ? `<div class="farmacia-distance show">📏 ${f.distancia.toFixed(1)} km</div>` : ''}
               <div class="farmacia-actions">
-                <button class="btn-small btn-map" onclick="iniciarNavegacao(${f.lat}, ${f.lng})">🗺️ Navegar</button>
+                ${localizacaoAtual ? `<button class="btn-small btn-map" onclick="mostrarRota(${localizacaoAtual.lat}, ${localizacaoAtual.lng}, ${f.lat}, ${f.lng})">🗺️ Ver Rota</button>` : ''}
+                <button class="btn-small" onclick="abrirGoogleMaps(${f.lat}, ${f.lng})">📍 Maps</button>
                 <button class="btn-small" onclick="copiarEndereco('${f.endereco}')">📋 Copiar</button>
               </div>
             </div>
@@ -247,11 +293,6 @@ function filtrarRede(rede) {
     localizacaoAtual ? localizacaoAtual.lng : FORTALEZA_CENTER.lng
   );
   exibirFarmaciasGroupadas();
-}
-
-function iniciarNavegacao(lat, lng) {
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-  window.open(url, '_blank');
 }
 
 function copiarEndereco(endereco) {
