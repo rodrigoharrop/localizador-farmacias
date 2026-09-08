@@ -266,7 +266,12 @@ function exibirFarmaciasGroupadas() {
 
   let html = '<div class="redes-container">';
 
-  Object.keys(farmaciasGroupadas).sort().forEach(rede => {
+  const ordemRedes = ['PAGUE MENOS', 'DROGASIL', 'EXTRAFARMA', 'OUTRAS'];
+  Object.keys(farmaciasGroupadas).sort((a, b) => {
+    const indexA = ordemRedes.indexOf(a);
+    const indexB = ordemRedes.indexOf(b);
+    return indexA - indexB;
+  }).forEach(rede => {
     const farmacias = farmaciasGroupadas[rede];
     const redeClass = rede.toLowerCase().replace(' ', '-');
     const redeInfo = REDES_INFO[rede] || { logo: null, color: '#666' };
