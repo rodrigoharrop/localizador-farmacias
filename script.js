@@ -7,11 +7,23 @@ let filtroAtual = 'todas';
 // Coordenadas centrais de Fortaleza
 const FORTALEZA_CENTER = { lat: -3.7319, lng: -38.5267 };
 
-const LOGOS_REDE = {
-  'PAGUE MENOS': '💙 Pague Menos',
-  'DROGASIL': '❤️ Drogasil',
-  'EXTRAFARMA': '💊 Extrafarma',
-  'OUTRAS': '🏪 Outras'
+const REDES_INFO = {
+  'PAGUE MENOS': {
+    logo: 'Logotipo_da_Pague_Menos.svg.webp',
+    color: '#003DA5'
+  },
+  'DROGASIL': {
+    logo: 'Logotipo_da_Drogasil_(2024).svg.webp',
+    color: '#E63946'
+  },
+  'EXTRAFARMA': {
+    logo: 'Logotipo_Extrafarma.png',
+    color: '#6B46C1'
+  },
+  'OUTRAS': {
+    logo: null,
+    color: '#666666'
+  }
 };
 
 async function carregarFarmacias() {
@@ -186,11 +198,19 @@ function exibirFarmaciasGroupadas() {
   Object.keys(farmaciasGroupadas).sort().forEach(rede => {
     const farmacias = farmaciasGroupadas[rede];
     const redeClass = rede.toLowerCase().replace(' ', '-');
+    const redeInfo = REDES_INFO[rede] || { logo: null, color: '#666' };
+    
+    let logoHtml = '';
+    if (redeInfo.logo) {
+      logoHtml = `<div class="rede-logo-container"><img src="${redeInfo.logo}" alt="${rede}" class="rede-logo"></div>`;
+    } else {
+      logoHtml = `<div class="rede-logo-text">${rede}</div>`;
+    }
     
     html += `
       <div class="rede-section">
-        <div class="rede-header ${redeClass}">
-          <div class="rede-logo">${LOGOS_REDE[rede] || rede}</div>
+        <div class="rede-header ${redeClass}" style="border-bottom-color: ${redeInfo.color}">
+          ${logoHtml}
           <div class="rede-count">${farmacias.length} lojas</div>
         </div>
         <div class="farmacia-grid">

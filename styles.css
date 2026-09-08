@@ -160,6 +160,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  height: 44px;
 }
 
 .filter-btn:hover {
@@ -173,22 +174,10 @@ body {
   border-color: var(--primary);
 }
 
-.logo-pague-menos {
-  color: var(--pague-menos-blue);
-  font-weight: 700;
-}
-
-.filter-btn.active .logo-pague-menos {
-  color: white;
-}
-
-.logo-drogasil {
-  color: var(--drogasil-red);
-  font-weight: 700;
-}
-
-.filter-btn.active .logo-drogasil {
-  color: white;
+.filter-logo {
+  height: 24px;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 /* Seções por Rede */
@@ -209,13 +198,25 @@ body {
 .rede-header {
   padding: 16px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 2px solid var(--gray-300);
+  border-bottom: 3px solid var(--gray-300);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+}
+
+.rede-logo-container {
+  height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 .rede-logo {
+  height: 100%;
+  max-width: 150px;
+  object-fit: contain;
+}
+
+.rede-logo-text {
   font-size: 18px;
   font-weight: 700;
 }
@@ -224,16 +225,8 @@ body {
   border-bottom-color: var(--pague-menos-blue);
 }
 
-.rede-header.pague-menos .rede-logo {
-  color: var(--pague-menos-blue);
-}
-
 .rede-header.drogasil {
   border-bottom-color: var(--drogasil-red);
-}
-
-.rede-header.drogasil .rede-logo {
-  color: var(--drogasil-red);
 }
 
 .rede-count {
@@ -358,5 +351,15 @@ body {
   .filter-btn {
     padding: 8px 12px;
     font-size: 12px;
+  }
+
+  .rede-header {
+    flex-wrap: wrap;
+  }
+
+  .rede-count {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
   }
 }
