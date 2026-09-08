@@ -11,18 +11,22 @@ const FORTALEZA_CENTER = { lat: -3.7319, lng: -38.5267 };
 const REDES_INFO = {
   'PAGUE MENOS': {
     logo: 'Logotipo_da_Pague_Menos.svg.webp',
+    icon: 'icone_pague_menos.svg',
     color: '#003DA5'
   },
   'DROGASIL': {
     logo: 'Logotipo_da_Drogasil_(2024).svg.webp',
+    icon: 'icone_drogasil.svg',
     color: '#E63946'
   },
   'EXTRAFARMA': {
     logo: 'Extrafarma.png',
+    icon: 'icone_extrafarma.svg',
     color: '#6B46C1'
   },
   'OUTRAS': {
     logo: null,
+    icon: null,
     color: '#666666'
   }
 };
@@ -99,22 +103,34 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
 
 function criarIconeRede(rede) {
   const redeInfo = REDES_INFO[rede] || REDES_INFO['OUTRAS'];
-  const logoFile = redeInfo.logo;
   
-  if (!logoFile) {
-    // Se não tem logo, usa emoji com cor da rede
-    return L.divIcon({
-      html: `<div style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:${redeInfo.color};border-radius:50%;color:white;font-size:24px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏪</div>`,
-      iconSize: [44, 44],
-      className: 'custom-marker'
-    });
-  }
+  // Cores vibrantes por rede
+  const cores = {
+    'PAGUE MENOS': '#003DA5',
+    'DROGASIL': '#E63946',
+    'EXTRAFARMA': '#6B46C1',
+    'OUTRAS': '#0F7D3F'
+  };
 
-  // Se tem logo, usa a imagem
+  const corRede = cores[rede] || cores['OUTRAS'];
+  
   return L.divIcon({
-    html: `<div style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;background:white;border-radius:50%;border:3px solid ${redeInfo.color};box-shadow:0 2px 8px rgba(0,0,0,0.3);overflow:hidden;padding:2px;"><img src="${logoFile}" style="max-width:90%;max-height:90%;object-fit:contain;"></div>`,
-    iconSize: [50, 50],
-    className: 'custom-marker-rede'
+    html: `<div style="
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: ${corRede};
+      border-radius: 50%;
+      color: white;
+      font-size: 20px;
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-weight: bold;
+    ">💊</div>`,
+    iconSize: [40, 40],
+    className: 'custom-marker'
   });
 }
 
