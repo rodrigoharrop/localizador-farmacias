@@ -3,7 +3,6 @@ let mapa = null;
 let marcadores = [];
 let localizacaoAtual = null;
 let filtroAtual = 'todas';
-let rotaAtual = null;
 
 // Coordenadas centrais de Fortaleza
 const FORTALEZA_CENTER = { lat: -3.7319, lng: -38.5267 };
@@ -104,7 +103,6 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
 function criarIconeRede(rede) {
   const redeInfo = REDES_INFO[rede] || REDES_INFO['OUTRAS'];
   
-  // Se tem ícone para esta rede, usa a imagem
   if (redeInfo.iconMapa) {
     return L.icon({
       iconUrl: redeInfo.iconMapa,
@@ -115,7 +113,6 @@ function criarIconeRede(rede) {
     });
   }
   
-  // Fallback: comprimido colorido
   return L.divIcon({
     html: `<div style="
       display: flex;
@@ -189,7 +186,7 @@ function inicializarMapa(lat, lng) {
               style="flex: 1; padding: 6px; background: #0F7D3F; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
               🗺️ Ver Rota
             </button>` : ''}
-            <button onclick="abrirGoogleMaps(${farmacia.lat}, ${farmacia.lng})" 
+            <button onclick="abrirGoogleMaps('${farmacia.nome.replace(/'/g, "\\'")}', '${farmacia.endereco.replace(/'/g, "\\'")}', '${farmacia.cidade}')" 
               style="flex: 1; padding: 6px; background: #666; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
               📍 Google Maps
             </button>
@@ -201,15 +198,11 @@ function inicializarMapa(lat, lng) {
   });
 }
 
-
-function abrirGoogleMaps(lat, lng) {
 function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
-  // Remove rota anterior se existir
   if (window.rotaAtual) {
     mapa.removeLayer(window.rotaAtual);
   }
 
-  // Traça linha simples do mapa
   const latlngs = [
     [latOrigem, lngOrigem],
     [latDestino, lngDestino]
@@ -222,20 +215,21 @@ function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
     dashArray: '5, 5'
   }).addTo(mapa);
 
-  // Zoom para ver a rota completa
   const group = new L.featureGroup([
     L.marker([latOrigem, lngOrigem]),
     L.marker([latDestino, lngDestino])
   ]);
   mapa.fitBounds(group.getBounds(), { padding: [50, 50] });
 
-  // Abre Google Maps automaticamente com a rota
   setTimeout(() => {
     const url = `https://www.google.com/maps/dir/${latOrigem},${lngOrigem}/${latDestino},${lngDestino}`;
     window.open(url, '_blank');
   }, 300);
 }
-  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+function abrirGoogleMaps(nome, endereco, cidade) {
+  const query = encodeURIComponent(`${nome} ${endereco}, ${cidade}`);
+  const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
   window.open(url, '_blank');
 }
 
@@ -302,8 +296,8 @@ function exibirFarmaciasGroupadas() {
               ${localizacaoAtual ? `<div class="farmacia-distance show">📏 ${f.distancia.toFixed(1)} km</div>` : ''}
               <div class="farmacia-actions">
                 ${localizacaoAtual ? `<button class="btn-small btn-map" onclick="mostrarRota(${localizacaoAtual.lat}, ${localizacaoAtual.lng}, ${f.lat}, ${f.lng})">🗺️ Ver Rota</button>` : ''}
-                <button class="btn-small" onclick="abrirGoogleMaps(${f.lat}, ${f.lng})">📍 Maps</button>
-                <button class="btn-small" onclick="copiarEndereco('${f.endereco}')">📋 Copiar</button>
+                <button class="btn-small" onclick="abrirGoogleMaps('${f.nome.replace(/'/g, "\\'")}', '${f.endereco.replace(/'/g, "\\'")}', '${f.cidade}')">📍 Maps</button>
+                <button class="btn-small" onclick="copiarEndereco('${f.endereco.replace(/'/g, "\\'")}')"📋 Copiar</button>
               </div>
             </div>
           `).join('')}
