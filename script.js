@@ -97,11 +97,24 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-function criarIconePharmacie() {
+function criarIconeRede(rede) {
+  const redeInfo = REDES_INFO[rede] || REDES_INFO['OUTRAS'];
+  const logoFile = redeInfo.logo;
+  
+  if (!logoFile) {
+    // Se não tem logo, usa emoji com cor da rede
+    return L.divIcon({
+      html: `<div style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:${redeInfo.color};border-radius:50%;color:white;font-size:24px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏪</div>`,
+      iconSize: [44, 44],
+      className: 'custom-marker'
+    });
+  }
+
+  // Se tem logo, usa a imagem
   return L.divIcon({
-    html: `<div style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:#0F7D3F;border-radius:50%;color:white;font-size:20px;border:3px solid white;box-shadow:0 2px 8px rgba(15,125,63,0.4);">💊</div>`,
-    iconSize: [40, 40],
-    className: 'custom-marker'
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:50px;height:50px;background:white;border-radius:50%;border:3px solid ${redeInfo.color};box-shadow:0 2px 8px rgba(0,0,0,0.3);overflow:hidden;padding:2px;"><img src="${logoFile}" style="max-width:90%;max-height:90%;object-fit:contain;"></div>`,
+    iconSize: [50, 50],
+    className: 'custom-marker-rede'
   });
 }
 
@@ -140,7 +153,7 @@ function inicializarMapa(lat, lng) {
 
   farmaciasVisiveis.forEach(farmacia => {
     const marker = L.marker([farmacia.lat, farmacia.lng], {
-      icon: criarIconePharmacie()
+      icon: criarIconeRede(farmacia.rede)
     }).addTo(mapa);
     
     const distancia = localizacaoAtual ? calcularDistancia(localizacaoAtual.lat, localizacaoAtual.lng, farmacia.lat, farmacia.lng) : 0;
@@ -171,12 +184,10 @@ function inicializarMapa(lat, lng) {
 }
 
 function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
-  // Remover rota anterior se existir
   if (rotaAtual) {
     mapa.removeControl(rotaAtual);
   }
 
-  // Criar rota
   rotaAtual = L.Routing.control({
     waypoints: [
       L.latLng(latOrigem, lngOrigem),
@@ -199,7 +210,6 @@ function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
     language: 'pt_BR'
   }).addTo(mapa);
 
-  // Ajustar zoom para ver a rota completa
   setTimeout(() => {
     const bounds = rotaAtual.getBounds();
     mapa.fitBounds(bounds, { padding: [50, 50] });
