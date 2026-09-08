@@ -70,6 +70,54 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
+function criarIconePharmacie() {
+  return L.divIcon({
+    html: `
+      <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: #0F7D3F;
+        border-radius: 50%;
+        color: white;
+        font-size: 20px;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(15, 125, 63, 0.4);
+      ">
+        💊
+      </div>
+    `,
+    iconSize: [40, 40],
+    className: 'custom-marker'
+  });
+}
+
+function criarIconeLocal() {
+  return L.divIcon({
+    html: `
+      <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: #1FA055;
+        border-radius: 50%;
+        color: white;
+        font-size: 18px;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(31, 160, 85, 0.5);
+      ">
+        📍
+      </div>
+    `,
+    iconSize: [36, 36],
+    className: 'custom-marker-local'
+  });
+}
+
 function inicializarMapa(lat, lng) {
   if (mapa) {
     mapa.remove();
@@ -83,14 +131,9 @@ function inicializarMapa(lat, lng) {
   marcadores.forEach(m => m.remove());
   marcadores = [];
 
-  L.circleMarker([lat, lng], {
-    radius: 8,
-    fillColor: '#0F7D3F',
-    color: '#fff',
-    weight: 2,
-    opacity: 1,
-    fillOpacity: 0.8
-  }).addTo(mapa).bindPopup('Sua localização atual');
+  L.marker([lat, lng], {
+    icon: criarIconeLocal()
+  }).addTo(mapa).bindPopup('<b>📍 Sua localização</b>').openPopup();
 
   const farmaciasVisiveis = FARMACIAS.filter(f => {
     if (filtroAtual === 'todas') return true;
@@ -99,8 +142,26 @@ function inicializarMapa(lat, lng) {
   });
 
   farmaciasVisiveis.forEach(farmacia => {
-    const marker = L.marker([farmacia.lat, farmacia.lng]).addTo(mapa);
-    marker.bindPopup(`<b>${farmacia.nome}</b><br>${farmacia.endereco}`);
+    const marker = L.marker([farmacia.lat, farmacia.lng], {
+      icon: criarIconePharmacie()
+    }).addTo(mapa);
+    
+    marker.bindPopup(`
+      <div style="width: 220px;">
+        <b style="font-size: 14px;">${farmacia.nome}</b><br>
+        <span style="font-size: 11px; color: #666;">${farmacia.rede}</span><br>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+          📍 ${farmacia.endereco}<br>
+          ${farmacia.bairro} - ${farmacia.cep}<br>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <button onclick="iniciarNavegacao(${farmacia.lat}, ${farmacia.lng})" 
+              style="flex: 1; padding: 6px; background: #0F7D3F; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              🗺️ Navegar
+            </button>
+          </div>
+        </div>
+      </div>
+    `);
     marcadores.push(marker);
   });
 }
@@ -136,19 +197,19 @@ function exibirFarmacias() {
   container.innerHTML = farmaciasOrdenadas.map(f => `
     <div class="farmacia-card">
       <div class="farmacia-name">
-        ${f.nome}
+        💊 ${f.nome}
         <span class="badge">${f.rede}</span>
       </div>
       <div class="farmacia-address">
         📍 ${f.endereco}<br>
-        ${f.bairro} - CEP: ${f.cep}
+        <span style="font-size: 12px; color: #666;">${f.bairro} - CEP: ${f.cep}</span>
       </div>
       <div class="farmacia-distance">
-        📏 ${f.distancia.toFixed(1)} km de você
+        📏 <strong>${f.distancia.toFixed(1)} km</strong> de você
       </div>
       <div class="farmacia-actions">
-        <button class="btn-small btn-map" onclick="abrirNoMapa(${f.lat}, ${f.lng})">Ver mapa</button>
-        <button class="btn-small" onclick="copiarEndereco('${f.endereco}')">Copiar</button>
+        <button class="btn-small btn-map" onclick="iniciarNavegacao(${f.lat}, ${f.lng})">🗺️ Navegar</button>
+        <button class="btn-small" onclick="copiarEndereco('${f.endereco}')">📋 Copiar</button>
       </div>
     </div>
   `).join('');
@@ -167,14 +228,15 @@ function filtrarRede(rede) {
   }
 }
 
-function abrirNoMapa(lat, lng) {
-  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+function iniciarNavegacao(lat, lng) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
   window.open(url, '_blank');
 }
 
 function copiarEndereco(endereco) {
-  navigator.clipboard.writeText(endereco);
-  alert('Endereço copiado!');
+  navigator.clipboard.writeText(endereco).then(() => {
+    alert('✅ Endereço copiado!');
+  });
 }
 
 carregarFarmacias();
