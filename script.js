@@ -18,7 +18,7 @@ const REDES_INFO = {
     color: '#E63946'
   },
   'EXTRAFARMA': {
-    logo: 'Logotipo_Extrafarma.png',
+    logo: 'Extrafarma.png',
     color: '#6B46C1'
   },
   'OUTRAS': {
