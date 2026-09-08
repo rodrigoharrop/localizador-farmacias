@@ -11,23 +11,23 @@ const FORTALEZA_CENTER = { lat: -3.7319, lng: -38.5267 };
 const REDES_INFO = {
   'PAGUE MENOS': {
     logo: 'Logotipo_da_Pague_Menos.svg.webp',
-    icon: 'icone_pague_menos.svg',
+    iconMapa: 'icone Pague Menos.png',
     color: '#003DA5'
   },
   'DROGASIL': {
     logo: 'Logotipo_da_Drogasil_(2024).svg.webp',
-    icon: 'icone_drogasil.svg',
+    iconMapa: 'icone Drogasil.jpg',
     color: '#E63946'
   },
   'EXTRAFARMA': {
     logo: 'Extrafarma.png',
-    icon: 'icone_extrafarma.svg',
+    iconMapa: 'icone ExtraFarma.jpeg',
     color: '#6B46C1'
   },
   'OUTRAS': {
     logo: null,
-    icon: null,
-    color: '#666666'
+    iconMapa: null,
+    color: '#0F7D3F'
   }
 };
 
@@ -104,16 +104,18 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
 function criarIconeRede(rede) {
   const redeInfo = REDES_INFO[rede] || REDES_INFO['OUTRAS'];
   
-  // Cores vibrantes por rede
-  const cores = {
-    'PAGUE MENOS': '#003DA5',
-    'DROGASIL': '#E63946',
-    'EXTRAFARMA': '#6B46C1',
-    'OUTRAS': '#0F7D3F'
-  };
-
-  const corRede = cores[rede] || cores['OUTRAS'];
+  // Se tem ícone para esta rede, usa a imagem
+  if (redeInfo.iconMapa) {
+    return L.icon({
+      iconUrl: redeInfo.iconMapa,
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -40],
+      className: 'custom-marker-icon'
+    });
+  }
   
+  // Fallback: comprimido colorido
   return L.divIcon({
     html: `<div style="
       display: flex;
@@ -121,7 +123,7 @@ function criarIconeRede(rede) {
       justify-content: center;
       width: 40px;
       height: 40px;
-      background: ${corRede};
+      background: ${redeInfo.color};
       border-radius: 50%;
       color: white;
       font-size: 20px;
