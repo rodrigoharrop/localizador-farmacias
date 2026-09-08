@@ -1,0 +1,12 @@
+{
+  "name": "localizador-farmacias",
+  "version": "1.0.0",
+  "description": "Localizador de farmácias parceiras com desconto especial",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 3000"
+  },
+  "keywords": ["farmacia", "localizador", "gps"],
+  "author": "Rodrigo Harrop",
+  "license": "MIT"
+}
