@@ -201,40 +201,40 @@ function inicializarMapa(lat, lng) {
   });
 }
 
-
-function abrirGoogleMaps(lat, lng) {
 function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
-  // Remove rota anterior se existir
-  if (window.rotaAtual) {
-    mapa.removeLayer(window.rotaAtual);
+  if (rotaAtual) {
+    mapa.removeControl(rotaAtual);
   }
 
-  // Traça linha simples do mapa
-  const latlngs = [
-    [latOrigem, lngOrigem],
-    [latDestino, lngDestino]
-  ];
-  
-  window.rotaAtual = L.polyline(latlngs, {
-    color: '#0F7D3F',
-    weight: 3,
-    opacity: 0.8,
-    dashArray: '5, 5'
+  rotaAtual = L.Routing.control({
+    waypoints: [
+      L.latLng(latOrigem, lngOrigem),
+      L.latLng(latDestino, lngDestino)
+    ],
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1'
+    }),
+    lineOptions: {
+      styles: [
+        { color: '#0F7D3F', opacity: 0.8, weight: 5 }
+      ]
+    },
+    summaryTemplate: '<div class="info"><h2>{name}</h2><p>{distance}, {time}</p></div>',
+    altLineOptions: {
+      styles: [
+        { color: 'gray', opacity: 0.1, weight: 5 }
+      ]
+    },
+    language: 'pt_BR'
   }).addTo(mapa);
 
-  // Zoom para ver a rota completa
-  const group = new L.featureGroup([
-    L.marker([latOrigem, lngOrigem]),
-    L.marker([latDestino, lngDestino])
-  ]);
-  mapa.fitBounds(group.getBounds(), { padding: [50, 50] });
-
-  // Abre Google Maps automaticamente com a rota
   setTimeout(() => {
-    const url = `https://www.google.com/maps/dir/${latOrigem},${lngOrigem}/${latDestino},${lngDestino}`;
-    window.open(url, '_blank');
-  }, 300);
+    const bounds = rotaAtual.getBounds();
+    mapa.fitBounds(bounds, { padding: [50, 50] });
+  }, 500);
 }
+
+function abrirGoogleMaps(lat, lng) {
   const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   window.open(url, '_blank');
 }
