@@ -16,13 +16,17 @@
 
     <div class="container">
         <div class="info-banner">
-            ℹ️ Utilize seu medicamento com segurança. Procure a farmácia mais próxima de você!
+            ℹ️ Clique em uma farmácia no mapa ou use sua localização para ordenar por distância
         </div>
 
+        <!-- Mapa Principal -->
+        <div id="map"></div>
+
+        <!-- Botão de Localização -->
         <div class="geo-card">
             <button class="geo-btn" id="geoBtn" onclick="obterLocalizacao()">
                 <span>📍</span>
-                <span id="geoText">Encontrar farmácias próximas</span>
+                <span id="geoText">Usar minha localização</span>
             </button>
             <div class="cep-input-container">
                 <input type="text" id="cepInput" class="cep-input" placeholder="Ou insira seu CEP (ex: 60175047)">
@@ -30,25 +34,27 @@
             </div>
         </div>
 
-        <div id="filters" class="filters" style="display: none;">
+        <!-- Filtros por Rede -->
+        <div class="filters" id="filters">
             <button class="filter-btn active" onclick="filtrarRede('todas')">Todas</button>
-            <button class="filter-btn" onclick="filtrarRede('PAGUE MENOS')">Pague Menos</button>
-            <button class="filter-btn" onclick="filtrarRede('DROGASIL')">Drogasil</button>
+            <button class="filter-btn" data-logo-text="pague-menos" onclick="filtrarRede('PAGUE MENOS')">
+                <span class="logo-pague-menos">Pague Menos</span>
+            </button>
+            <button class="filter-btn" data-logo-text="drogasil" onclick="filtrarRede('DROGASIL')">
+                <span class="logo-drogasil">Drogasil</span>
+            </button>
             <button class="filter-btn" onclick="filtrarRede('EXTRAFARMA')">Extrafarma</button>
             <button class="filter-btn" onclick="filtrarRede('OUTRAS')">Outras</button>
         </div>
 
-        <div id="map"></div>
-
-        <div id="resultado" style="display: none;">
-            <div class="farmacia-list" id="farmaciasContainer"></div>
-        </div>
+        <!-- Farmácias por Rede -->
+        <div id="farmaciasContainer"></div>
 
         <div id="empty" class="empty-state" style="display: none;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             </svg>
-            <p>Nenhuma farmácia encontrada nessa região</p>
+            <p>Nenhuma farmácia encontrada</p>
         </div>
     </div>
 

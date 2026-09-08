@@ -4,14 +4,30 @@ let marcadores = [];
 let localizacaoAtual = null;
 let filtroAtual = 'todas';
 
+// Coordenadas centrais de Fortaleza
+const FORTALEZA_CENTER = { lat: -3.7319, lng: -38.5267 };
+
+const LOGOS_REDE = {
+  'PAGUE MENOS': '💙 Pague Menos',
+  'DROGASIL': '❤️ Drogasil',
+  'EXTRAFARMA': '💊 Extrafarma',
+  'OUTRAS': '🏪 Outras'
+};
+
 async function carregarFarmacias() {
   try {
     const response = await fetch('farmacias.json');
     const data = await response.json();
     FARMACIAS = data.farmacias;
+    inicializarPagina();
   } catch (error) {
     console.error('Erro ao carregar farmácias:', error);
   }
+}
+
+function inicializarPagina() {
+  inicializarMapa(FORTALEZA_CENTER.lat, FORTALEZA_CENTER.lng);
+  exibirFarmaciasGroupadas();
 }
 
 function obterLocalizacao() {
@@ -26,20 +42,17 @@ function obterLocalizacao() {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-        exibirFarmacias();
+        inicializarMapa(localizacaoAtual.lat, localizacaoAtual.lng);
+        exibirFarmaciasGroupadas();
         btn.disabled = false;
-        document.getElementById('geoText').textContent = 'Encontrar farmácias próximas';
+        document.getElementById('geoText').textContent = 'Usar minha localização';
       },
       (error) => {
         alert('Não conseguimos acessar sua localização. Por favor, verifique as permissões.');
         btn.disabled = false;
-        document.getElementById('geoText').textContent = 'Encontrar farmácias próximas';
+        document.getElementById('geoText').textContent = 'Usar minha localização';
       }
     );
-  } else {
-    alert('Seu navegador não suporta geolocalização.');
-    btn.disabled = false;
-    document.getElementById('geoText').textContent = 'Encontrar farmácias próximas';
   }
 }
 
@@ -53,7 +66,8 @@ function buscarPorCep() {
   const farmaciaRef = FARMACIAS.find(f => f.cep === cep);
   if (farmaciaRef) {
     localizacaoAtual = { lat: farmaciaRef.lat, lng: farmaciaRef.lng };
-    exibirFarmacias();
+    inicializarMapa(localizacaoAtual.lat, localizacaoAtual.lng);
+    exibirFarmaciasGroupadas();
   } else {
     alert('CEP não encontrado na nossa base de farmácias.');
   }
@@ -72,23 +86,7 @@ function calcularDistancia(lat1, lng1, lat2, lng2) {
 
 function criarIconePharmacie() {
   return L.divIcon({
-    html: `
-      <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        background: #0F7D3F;
-        border-radius: 50%;
-        color: white;
-        font-size: 20px;
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(15, 125, 63, 0.4);
-      ">
-        💊
-      </div>
-    `,
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:#0F7D3F;border-radius:50%;color:white;font-size:20px;border:3px solid white;box-shadow:0 2px 8px rgba(15,125,63,0.4);">💊</div>`,
     iconSize: [40, 40],
     className: 'custom-marker'
   });
@@ -96,23 +94,7 @@ function criarIconePharmacie() {
 
 function criarIconeLocal() {
   return L.divIcon({
-    html: `
-      <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        background: #1FA055;
-        border-radius: 50%;
-        color: white;
-        font-size: 18px;
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(31, 160, 85, 0.5);
-      ">
-        📍
-      </div>
-    `,
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#1FA055;border-radius:50%;color:white;font-size:18px;border:3px solid white;box-shadow:0 2px 8px rgba(31,160,85,0.5);">📍</div>`,
     iconSize: [36, 36],
     className: 'custom-marker-local'
   });
@@ -123,7 +105,7 @@ function inicializarMapa(lat, lng) {
     mapa.remove();
   }
 
-  mapa = L.map('map').setView([lat, lng], 14);
+  mapa = L.map('map').setView([lat, lng], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(mapa);
@@ -131,9 +113,11 @@ function inicializarMapa(lat, lng) {
   marcadores.forEach(m => m.remove());
   marcadores = [];
 
-  L.marker([lat, lng], {
-    icon: criarIconeLocal()
-  }).addTo(mapa).bindPopup('<b>📍 Sua localização</b>').openPopup();
+  if (localizacaoAtual) {
+    L.marker([lat, lng], {
+      icon: criarIconeLocal()
+    }).addTo(mapa).bindPopup('<b>📍 Sua localização</b>').openPopup();
+  }
 
   const farmaciasVisiveis = FARMACIAS.filter(f => {
     if (filtroAtual === 'todas') return true;
@@ -146,13 +130,16 @@ function inicializarMapa(lat, lng) {
       icon: criarIconePharmacie()
     }).addTo(mapa);
     
+    const distancia = localizacaoAtual ? calcularDistancia(localizacaoAtual.lat, localizacaoAtual.lng, farmacia.lat, farmacia.lng) : 0;
+    
     marker.bindPopup(`
       <div style="width: 220px;">
         <b style="font-size: 14px;">${farmacia.nome}</b><br>
         <span style="font-size: 11px; color: #666;">${farmacia.rede}</span><br>
+        ${localizacaoAtual ? `<span style="font-size: 11px; color: #0F7D3F; font-weight: 600;">📏 ${distancia.toFixed(1)} km</span><br>` : ''}
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
           📍 ${farmacia.endereco}<br>
-          ${farmacia.bairro} - ${farmacia.cep}<br>
+          <small>${farmacia.bairro} - ${farmacia.cep}</small><br>
           <div style="margin-top: 8px; display: flex; gap: 6px;">
             <button onclick="iniciarNavegacao(${farmacia.lat}, ${farmacia.lng})" 
               style="flex: 1; padding: 6px; background: #0F7D3F; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
@@ -166,66 +153,80 @@ function inicializarMapa(lat, lng) {
   });
 }
 
-function exibirFarmacias() {
-  if (!localizacaoAtual) return;
-
-  document.getElementById('filters').style.display = 'flex';
-
-  const farmaciasOrdenadas = FARMACIAS.map(f => ({
-    ...f,
-    distancia: calcularDistancia(localizacaoAtual.lat, localizacaoAtual.lng, f.lat, f.lng)
-  }))
-  .filter(f => {
-    if (filtroAtual === 'todas') return true;
-    if (filtroAtual === 'OUTRAS') return f.rede === 'OUTRAS';
-    return f.rede === filtroAtual;
-  })
-  .sort((a, b) => a.distancia - b.distancia);
-
-  inicializarMapa(localizacaoAtual.lat, localizacaoAtual.lng);
-
+function exibirFarmaciasGroupadas() {
   const container = document.getElementById('farmaciasContainer');
-  const resultado = document.getElementById('resultado');
-  const empty = document.getElementById('empty');
+  const filtroAtualRede = filtroAtual === 'todas' ? null : filtroAtual;
 
-  if (farmaciasOrdenadas.length === 0) {
-    resultado.style.display = 'none';
-    empty.style.display = 'block';
-    return;
-  }
+  const farmaciasGroupadas = {};
+  
+  FARMACIAS.forEach(f => {
+    if (filtroAtualRede && f.rede !== filtroAtualRede) return;
+    
+    if (!farmaciasGroupadas[f.rede]) {
+      farmaciasGroupadas[f.rede] = [];
+    }
+    
+    let farmacia = { ...f };
+    if (localizacaoAtual) {
+      farmacia.distancia = calcularDistancia(localizacaoAtual.lat, localizacaoAtual.lng, f.lat, f.lng);
+    }
+    
+    farmaciasGroupadas[f.rede].push(farmacia);
+  });
 
-  container.innerHTML = farmaciasOrdenadas.map(f => `
-    <div class="farmacia-card">
-      <div class="farmacia-name">
-        💊 ${f.nome}
-        <span class="badge">${f.rede}</span>
-      </div>
-      <div class="farmacia-address">
-        📍 ${f.endereco}<br>
-        <span style="font-size: 12px; color: #666;">${f.bairro} - CEP: ${f.cep}</span>
-      </div>
-      <div class="farmacia-distance">
-        📏 <strong>${f.distancia.toFixed(1)} km</strong> de você
-      </div>
-      <div class="farmacia-actions">
-        <button class="btn-small btn-map" onclick="iniciarNavegacao(${f.lat}, ${f.lng})">🗺️ Navegar</button>
-        <button class="btn-small" onclick="copiarEndereco('${f.endereco}')">📋 Copiar</button>
-      </div>
-    </div>
-  `).join('');
+  // Ordenar por distância se localização foi fornecida
+  Object.keys(farmaciasGroupadas).forEach(rede => {
+    if (localizacaoAtual) {
+      farmaciasGroupadas[rede].sort((a, b) => a.distancia - b.distancia);
+    }
+  });
 
-  resultado.style.display = 'block';
-  empty.style.display = 'none';
+  let html = '<div class="redes-container">';
+
+  Object.keys(farmaciasGroupadas).sort().forEach(rede => {
+    const farmacias = farmaciasGroupadas[rede];
+    const redeClass = rede.toLowerCase().replace(' ', '-');
+    
+    html += `
+      <div class="rede-section">
+        <div class="rede-header ${redeClass}">
+          <div class="rede-logo">${LOGOS_REDE[rede] || rede}</div>
+          <div class="rede-count">${farmacias.length} lojas</div>
+        </div>
+        <div class="farmacia-grid">
+          ${farmacias.map(f => `
+            <div class="farmacia-card">
+              <div class="farmacia-name">💊 ${f.nome}</div>
+              <div class="farmacia-address">
+                📍 ${f.endereco}<br>
+                <small>${f.bairro} - CEP: ${f.cep}</small>
+              </div>
+              ${localizacaoAtual ? `<div class="farmacia-distance show">📏 ${f.distancia.toFixed(1)} km</div>` : ''}
+              <div class="farmacia-actions">
+                <button class="btn-small btn-map" onclick="iniciarNavegacao(${f.lat}, ${f.lng})">🗺️ Navegar</button>
+                <button class="btn-small" onclick="copiarEndereco('${f.endereco}')">📋 Copiar</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function filtrarRede(rede) {
   filtroAtual = rede;
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  event.target.closest('.filter-btn').classList.add('active');
 
-  if (localizacaoAtual) {
-    exibirFarmacias();
-  }
+  inicializarMapa(
+    localizacaoAtual ? localizacaoAtual.lat : FORTALEZA_CENTER.lat,
+    localizacaoAtual ? localizacaoAtual.lng : FORTALEZA_CENTER.lng
+  );
+  exibirFarmaciasGroupadas();
 }
 
 function iniciarNavegacao(lat, lng) {
