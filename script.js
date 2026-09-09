@@ -36,6 +36,8 @@ async function carregarFarmacias() {
     const data = await response.json();
     FARMACIAS = data.farmacias;
     inicializarPagina();
+    // Ativar geolocalização automaticamente
+    obterLocalizacao();
   } catch (error) {
     console.error('Erro ao carregar farmácias:', error);
   }
@@ -64,14 +66,13 @@ function obterLocalizacao() {
         document.getElementById('geoText').textContent = 'Usar minha localização';
       },
       (error) => {
-        alert('Não conseguimos acessar sua localização. Por favor, verifique as permissões.');
+        console.log('Erro ao obter localização:', error);
         btn.disabled = false;
         document.getElementById('geoText').textContent = 'Usar minha localização';
       }
     );
   }
 }
-
 
 function calcularDistancia(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -281,7 +282,7 @@ function exibirFarmaciasGroupadas() {
               <div class="farmacia-actions">
                 ${localizacaoAtual ? `<button class="btn-small btn-map" onclick="mostrarRota(${localizacaoAtual.lat}, ${localizacaoAtual.lng}, ${f.lat}, ${f.lng})">🗺️ Ver Rota</button>` : ''}
                 <button class="btn-small" onclick="abrirGoogleMaps('${f.nome.replace(/'/g, "\\'")}', '${f.endereco.replace(/'/g, "\\'")}', '${f.cidade}')">📍 Maps</button>
-                <button class="btn-small" onclick="copiarEndereco('${f.endereco.replace(/'/g, "\\'")}')"📋 Copiar</button>
+                <button class="btn-small" onclick="copiarEndereco('${f.endereco.replace(/'/g, "\\'")}')" style="min-width: 80px;">📋 Copiar</button>
               </div>
             </div>
           `).join('')}
