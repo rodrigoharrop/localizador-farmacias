@@ -72,22 +72,6 @@ function obterLocalizacao() {
   }
 }
 
-function buscarPorCep() {
-  const cep = document.getElementById('cepInput').value.replace(/\D/g, '');
-  if (cep.length !== 8) {
-    alert('CEP inválido. Use 8 dígitos.');
-    return;
-  }
-
-  const farmaciaRef = FARMACIAS.find(f => f.cep === cep);
-  if (farmaciaRef) {
-    localizacaoAtual = { lat: farmaciaRef.lat, lng: farmaciaRef.lng };
-    inicializarMapa(localizacaoAtual.lat, localizacaoAtual.lng);
-    exibirFarmaciasGroupadas();
-  } else {
-    alert('CEP não encontrado na nossa base de farmácias.');
-  }
-}
 
 function calcularDistancia(lat1, lng1, lat2, lng2) {
   const R = 6371;
