@@ -36,7 +36,6 @@ async function carregarFarmacias() {
     const data = await response.json();
     FARMACIAS = data.farmacias;
     inicializarPagina();
-    // Ativar geolocalização automaticamente
     obterLocalizacao();
   } catch (error) {
     console.error('Erro ao carregar farmácias:', error);
@@ -194,10 +193,10 @@ function mostrarRota(latOrigem, lngOrigem, latDestino, lngDestino) {
   ];
   
   window.rotaAtual = L.polyline(latlngs, {
-    color: '#0F7D3F',
-    weight: 3,
+    color: '#0066FF',
+    weight: 4,
     opacity: 0.8,
-    dashArray: '5, 5'
+    dashArray: '0'
   }).addTo(mapa);
 
   const group = new L.featureGroup([
@@ -216,6 +215,12 @@ function abrirGoogleMaps(nome, endereco, cidade) {
   const query = encodeURIComponent(`${nome} ${endereco}, ${cidade}`);
   const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
   window.open(url, '_blank');
+}
+
+function mostrarRotaDoCard(latDestino, lngDestino) {
+  if (localizacaoAtual) {
+    mostrarRota(localizacaoAtual.lat, localizacaoAtual.lng, latDestino, lngDestino);
+  }
 }
 
 function exibirFarmaciasGroupadas() {
@@ -272,7 +277,7 @@ function exibirFarmaciasGroupadas() {
         </div>
         <div class="farmacia-grid">
           ${farmacias.map(f => `
-            <div class="farmacia-card">
+            <div class="farmacia-card" onclick="mostrarRotaDoCard(${f.lat}, ${f.lng})" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
               <div class="farmacia-name">💊 ${f.nome}</div>
               <div class="farmacia-address">
                 📍 ${f.endereco}<br>
@@ -280,9 +285,9 @@ function exibirFarmaciasGroupadas() {
               </div>
               ${localizacaoAtual ? `<div class="farmacia-distance show">📏 ${f.distancia.toFixed(1)} km</div>` : ''}
               <div class="farmacia-actions">
-                ${localizacaoAtual ? `<button class="btn-small btn-map" onclick="mostrarRota(${localizacaoAtual.lat}, ${localizacaoAtual.lng}, ${f.lat}, ${f.lng})">🗺️ Ver Rota</button>` : ''}
-                <button class="btn-small" onclick="abrirGoogleMaps('${f.nome.replace(/'/g, "\\'")}', '${f.endereco.replace(/'/g, "\\'")}', '${f.cidade}')">📍 Maps</button>
-                <button class="btn-small" onclick="copiarEndereco('${f.endereco.replace(/'/g, "\\'")}')" style="min-width: 80px;">📋 Copiar</button>
+                ${localizacaoAtual ? `<button class="btn-small btn-map" onclick="mostrarRota(${localizacaoAtual.lat}, ${localizacaoAtual.lng}, ${f.lat}, ${f.lng}); event.stopPropagation();">🗺️ Ver Rota</button>` : ''}
+                <button class="btn-small" onclick="abrirGoogleMaps('${f.nome.replace(/'/g, "\\'")}', '${f.endereco.replace(/'/g, "\\'")}', '${f.cidade}'); event.stopPropagation();">📍 Maps</button>
+                <button class="btn-small" onclick="copiarEndereco('${f.endereco.replace(/'/g, "\\'")}''); event.stopPropagation();" style="min-width: 80px;">📋 Copiar</button>
               </div>
             </div>
           `).join('')}
